@@ -5,7 +5,7 @@ import autoprefixer from "autoprefixer";
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "/GameCenter/blob/main/",
+  base: "/",
   plugins: [react()],
   css: {
     postcss: {
