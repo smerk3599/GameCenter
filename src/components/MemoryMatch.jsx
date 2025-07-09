@@ -245,10 +245,15 @@ const MemoryMatch = ({ onClose }) => {
                       ? "hidden"
                       : "block"
                   }
-                  bg-gradient-to-r from-bright-green to-emerald-600 flex items-center justify-center
+                  flex items-center justify-center
                 `}
               >
-                <span className="text-dark-grey font-bold text-xl">?</span>
+                <img
+                  src="/Memory Green Card.png"
+                  alt="Card back"
+                  className="w-full h-full object-cover rounded-lg"
+                  draggable="false"
+                />
               </div>
               {/* Back of the card (face up - animal image) */}
               <div

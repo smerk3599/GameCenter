@@ -203,15 +203,15 @@ const Solitaire = ({ onClose }) => {
         }
         return;
       }
-      setStock(waste.map((c) => ({ ...c, faceUp: false })).reverse());
+      setStock(waste.map((c) => ({ ...c, faceUp: false })));
       setWaste([]);
     } else {
       // Deal three cards at a time
       const cardsToDeal = Math.min(3, stock.length);
       const newCards = stock
-        .slice(-cardsToDeal)
+        .slice(0, cardsToDeal)
         .map((card) => ({ ...card, faceUp: true }));
-      setStock(stock.slice(0, -cardsToDeal));
+      setStock(stock.slice(cardsToDeal));
       setWaste([...waste, ...newCards]);
     }
   };
@@ -320,24 +320,41 @@ const Solitaire = ({ onClose }) => {
   }
 
   // Card rendering
-  const renderCard = (card, isSelected) => (
+  const renderCard = (card, isSelected, style = {}) => (
     <div
-      className={`w-12 h-18 sm:w-16 sm:h-24 rounded-lg border-2 flex flex-col items-center justify-center text-sm sm:text-xl font-bold shadow-md select-none cursor-pointer
-        ${CARD_COLORS[card.color]} ${isSelected ? "ring-4 ring-yellow-400" : ""}
-        ${!card.faceUp ? "bg-gray-700 border-gray-500 text-gray-700" : ""}
+      className={`w-12 h-18 sm:w-16 sm:h-24 rounded-lg border-2 flex flex-col items-center justify-between text-xs sm:text-base font-bold shadow-md select-none cursor-pointer
+        ${card.faceUp ? "bg-white border-gray-400" : "border-gray-500"}
+        ${isSelected ? "ring-4 ring-yellow-400" : ""}
       `}
       style={{
         marginTop: window.innerWidth < 640 ? "-1.8rem" : "-2.2rem",
         zIndex: isSelected ? 10 : undefined,
+        ...style,
       }}
     >
       {card.faceUp ? (
         <>
-          <span className="text-xs sm:text-base">{card.rank}</span>
-          <span className="text-xs sm:text-base">{card.suit}</span>
+          <span
+            className={`self-start ml-1 mt-1 ${
+              COLORS[card.suit] === "red" ? "text-red-600" : "text-black"
+            }`}
+          >
+            {card.rank} {card.suit}
+          </span>
+          <span
+            className={`self-end mr-1 mb-1 rotate-180 ${
+              COLORS[card.suit] === "red" ? "text-red-600" : "text-black"
+            }`}
+          >
+            {card.rank} {card.suit}
+          </span>
         </>
       ) : (
-        <span className="text-gray-400 text-sm sm:text-base">🂠</span>
+        <img
+          src="/Green card.png"
+          alt="Card back"
+          className="w-full h-full object-cover rounded-lg"
+        />
       )}
     </div>
   );
@@ -358,55 +375,81 @@ const Solitaire = ({ onClose }) => {
           Solitaire
         </h2>
         {/* Foundations, Stock, and Waste above tableau, aligned to columns */}
+        {/* Replace the top row flex with a grid for precise alignment */}
         <div
-          className="w-full flex flex-row justify-center mb-6 sm:mb-8 lg:mb-12 relative"
-          style={{ minHeight: "80px", paddingTop: "25px" }}
+          className="w-full grid grid-cols-8 gap-0 max-w-[900px] mx-auto px-2 items-start"
+          style={{ marginBottom: "2rem" }}
         >
-          {/* 7 columns: 2 for stock/waste, 1 spacer, 4 for foundations */}
-          <div className="flex flex-row w-full max-w-[560px] mx-auto px-2">
-            {/* Stock above col 0 */}
-            <div className="flex flex-col items-center w-12 sm:w-16 mr-2 sm:mr-6">
+          {/* New Game button, far left */}
+          <div
+            className="flex flex-col items-center justify-center col-span-1"
+            style={{ marginRight: "2.5rem" }}
+          >
+            <button
+              onClick={newGame}
+              className="w-12 h-18 sm:w-16 sm:h-24 bg-gradient-to-r from-bright-green to-emerald-600 text-dark-grey rounded-md border border-bright-green hover:from-emerald-600 hover:to-bright-green transition-all duration-300 shadow-[0_0_10px_rgba(0,204,126,0.3)] flex items-center justify-center text-base sm:text-lg font-bold"
+              style={{ minWidth: "3rem", minHeight: "4.5rem" }}
+            >
+              New
+              <br />
+              Game
+            </button>
+          </div>
+          {/* Stock pile, column 2, aligns with first tableau column */}
+          <div className="flex flex-col items-center w-12 sm:w-16 col-span-1">
+            <div
+              className="w-12 h-18 sm:w-16 sm:h-24 rounded-lg border-2 border-amber-700 bg-black flex flex-col items-center justify-center cursor-pointer mb-2"
+              onClick={handleStockClick}
+            >
+              {stock.length === 0 ? (
+                <span className="text-gray-700 text-lg sm:text-2xl">↺</span>
+              ) : (
+                <span className="text-gray-400 text-lg sm:text-2xl">🂠</span>
+              )}
+            </div>
+          </div>
+          {/* Waste pile, column 3 */}
+          <div className="flex flex-col items-start w-36 h-18 sm:w-48 sm:h-24 col-span-1">
+            <div
+              className="relative w-36 h-18 sm:w-48 sm:h-24"
+              onClick={() => handleCardClick("waste")}
+            >
+              {waste.length === 0 && (
+                <div className="absolute bottom-0 left-0 w-12 h-18 sm:w-16 sm:h-24 rounded-lg border-2 border-amber-700 bg-black flex items-center justify-center" />
+              )}
+              {waste.length > 0 &&
+                waste.slice(-3).map((card, idx, arr) =>
+                  renderCard(card, idx === arr.length - 1, {
+                    position: "absolute",
+                    left: `calc(${idx} * 3rem)`,
+                    bottom: 0,
+                    zIndex: idx + 1,
+                    cursor: idx === arr.length - 1 ? "pointer" : "default",
+                    pointerEvents: idx === arr.length - 1 ? "auto" : "none",
+                  })
+                )}
+            </div>
+          </div>
+          {/* Spacer, column 4 */}
+          <div className="col-span-1" />
+          {/* Foundations, columns 5-8 */}
+          {foundations.map((pile, i) => (
+            <div
+              key={i}
+              className="flex flex-col items-center w-12 sm:w-16 col-span-1"
+            >
               <div
                 className="w-12 h-18 sm:w-16 sm:h-24 rounded-lg border-2 border-amber-700 bg-black flex flex-col items-center justify-center cursor-pointer mb-2"
-                onClick={handleStockClick}
+                onClick={() => handleFoundationClick(i)}
               >
-                {stock.length === 0 ? (
-                  <span className="text-gray-700 text-lg sm:text-2xl">↺</span>
+                {pile.length === 0 ? (
+                  <span className="text-gray-700 text-lg sm:text-2xl">A</span>
                 ) : (
-                  <span className="text-gray-400 text-lg sm:text-2xl">🂠</span>
+                  renderCard(pile[pile.length - 1])
                 )}
               </div>
             </div>
-            {/* Waste above col 1 */}
-            <div className="flex flex-col items-center w-12 sm:w-16 mr-4 sm:mr-12">
-              <div
-                className="w-12 h-18 sm:w-16 sm:h-24 rounded-lg border-2 border-amber-700 bg-black flex flex-col items-center justify-center cursor-pointer mb-2"
-                onClick={() => handleCardClick("waste")}
-              >
-                {waste.length > 0 && renderCard(waste[waste.length - 1])}
-              </div>
-            </div>
-            {/* Spacer for columns 2-3 */}
-            <div className="w-12 sm:w-16 mr-2 sm:mr-6" />
-            {/* Foundations above cols 3-6 */}
-            {foundations.map((pile, i) => (
-              <div
-                key={i}
-                className="flex flex-col items-center w-12 sm:w-16 mr-2 sm:mr-6 last:mr-0"
-              >
-                <div
-                  className="w-12 h-18 sm:w-16 sm:h-24 rounded-lg border-2 border-amber-700 bg-black flex flex-col items-center justify-center cursor-pointer mb-2"
-                  onClick={() => handleFoundationClick(i)}
-                >
-                  {pile.length === 0 ? (
-                    <span className="text-gray-700 text-lg sm:text-2xl">A</span>
-                  ) : (
-                    renderCard(pile[pile.length - 1])
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
         {/* Tableau, spaced below the row above */}
         <div className="flex space-x-2 sm:space-x-4 lg:space-x-6 w-full justify-center mt-4 sm:mt-6 px-2">
